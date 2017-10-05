@@ -18,28 +18,24 @@ import android.widget.Toast;
 
 import com.example.android.inventorymanagement.data.InventoryContract.inventoryEntry;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 import static android.content.ContentValues.TAG;
 
 public class InventoryCursorAdapter extends CursorAdapter {
 
+    private Context context;
 
     public InventoryCursorAdapter(Context context, Cursor c) {
         super(context, c, 0);
+        this.context = context;
     }
 
     @Override
-    public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        return LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
-    }
-
-    @Override
-    public void bindView(View view, final Context context, Cursor cursor) {
-        TextView nameTextView = (TextView) view.findViewById(R.id.product_name);
-        TextView modelTextView = (TextView) view.findViewById(R.id.product_model);
-        TextView priceTextView = (TextView) view.findViewById(R.id.product_price);
-        TextView quantityTextView = (TextView) view.findViewById(R.id.product_current_quantity);
-        ImageView photoImageView = (ImageView) view.findViewById(R.id.product_image);
-        ImageButton buyImageButton = (ImageButton) view.findViewById(R.id.product_buy_button);
+    public View newView(final Context context, Cursor cursor, ViewGroup parent) {
+        final View view = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
+        final ViewHolder viewHolder = new ViewHolder(view);
 
         final int productIdColumnIndex = cursor.getInt(cursor.getColumnIndex(inventoryEntry._ID));
         int nameColumnIndex = cursor.getColumnIndex(inventoryEntry.COLUMN_PRODUCT_NAME);
@@ -54,24 +50,48 @@ public class InventoryCursorAdapter extends CursorAdapter {
         final int quantityProduct = cursor.getInt(quantityColumnIndex);
         String imageUriString = cursor.getString(photoColumnIndex);
         Uri productImageUri = Uri.parse(imageUriString);
-        photoImageView.setImageURI(productImageUri);
 
         if (TextUtils.isEmpty(productModel)) {
-            modelTextView.setVisibility(View.GONE);
+            viewHolder.modelTextView.setVisibility(View.GONE);
         }
 
-        nameTextView.setText(productName);
-        modelTextView.setText(productModel);
-        priceTextView.setText(productPrice);
-        quantityTextView.setText(String.valueOf(quantityProduct));
+        viewHolder.nameTextView.setText(productName);
+        viewHolder.modelTextView.setText(productModel);
+        viewHolder.priceTextView.setText(productPrice);
+        viewHolder.quantityTextView.setText(String.valueOf(quantityProduct));
+        viewHolder.photoImageView.setImageURI(productImageUri);
 
-        buyImageButton.setOnClickListener(new View.OnClickListener() {
+        viewHolder.buyImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Uri productUri = ContentUris.withAppendedId(inventoryEntry.CONTENT_URI, productIdColumnIndex);
                 adjustProductQuantity(context, productUri, quantityProduct);
             }
         });
+        return view;
+    }
+
+    @Override
+    public void bindView(View view, final Context context, Cursor cursor) {
+    }
+
+    static class ViewHolder {
+        @BindView(R.id.product_name)
+        TextView nameTextView;
+        @BindView(R.id.product_model)
+        TextView modelTextView;
+        @BindView(R.id.product_price)
+        TextView priceTextView;
+        @BindView(R.id.product_current_quantity)
+        TextView quantityTextView;
+        @BindView(R.id.product_image)
+        ImageView photoImageView;
+        @BindView(R.id.product_buy_button)
+        ImageButton buyImageButton;
+
+        public ViewHolder(View view) {
+            ButterKnife.bind(this, view);
+        }
     }
 
     private void adjustProductQuantity(Context context, Uri productUri, int currentQuantityInStock) {
