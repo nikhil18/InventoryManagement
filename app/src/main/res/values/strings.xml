@@ -56,4 +56,6 @@
         <string name="example_quantity">9</string>
         <string name="toast_out_of_stock_msg">Product is out of stock!</string>
         <string name="validation_msg_product_image">Photo of product is required</string>
+        <string name="inc_quantity">increase quantity</string>
+        <string name="dec_quantity">decrease quantity</string>
 </resources>

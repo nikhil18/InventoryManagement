@@ -24,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -59,6 +60,12 @@ public class EditorActivity extends AppCompatActivity implements
 
     private TextView mPhotoHintText;
 
+    private Button mAddQuantityButton;
+
+    private Button mReduceQuantityButton;
+
+    private int mQuantity;
+
     private boolean mProductHasChanged = false;
 
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
@@ -87,6 +94,8 @@ public class EditorActivity extends AppCompatActivity implements
         mSupplierName = (EditText) findViewById(R.id.edit_product_supplier_name);
         mSupplierEmail = (EditText) findViewById(R.id.edit_product_supplier_email);
         mPhotoHintText = (TextView) findViewById(R.id.add_or_edit_photo_hint);
+        mAddQuantityButton = (Button) findViewById(R.id.addQuantityButton);
+        mReduceQuantityButton = (Button) findViewById(R.id.reducequanityButton);
 
         if (mCurrentProductUri == null) {
             setTitle(getString(R.string.editor_activity_title_new_product));
@@ -105,6 +114,22 @@ public class EditorActivity extends AppCompatActivity implements
         mPrice.setOnTouchListener(mTouchListener);
         mSupplierName.setOnTouchListener(mTouchListener);
         mSupplierEmail.setOnTouchListener(mTouchListener);
+        mAddQuantityButton.setOnTouchListener(mTouchListener);
+        mReduceQuantityButton.setOnTouchListener(mTouchListener);
+
+        mAddQuantityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addQuantityButton(v);
+            }
+        });
+
+        mReduceQuantityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                reduceQuantityButton(v);
+            }
+        });
 
         mPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -179,7 +204,9 @@ public class EditorActivity extends AppCompatActivity implements
                 "Best regards," + "\n" +
                 "_________________";
         intent.putExtra(android.content.Intent.EXTRA_TEXT, message);
-        startActivity(intent);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 
     private boolean saveProduct() {
@@ -192,18 +219,6 @@ public class EditorActivity extends AppCompatActivity implements
         String priceString = mPrice.getText().toString().trim();
         String supplierNameString = mSupplierName.getText().toString().trim();
         String supplierEmailString = mSupplierEmail.getText().toString().trim();
-
-        if (mCurrentProductUri == null &&
-                TextUtils.isEmpty(nameString) &&
-                TextUtils.isEmpty(modelString) &&
-                TextUtils.isEmpty(quantityString) &&
-                TextUtils.isEmpty(priceString) &&
-                TextUtils.isEmpty(supplierNameString) &&
-                TextUtils.isEmpty(supplierEmailString) &&
-                mImageUri == null) {
-            hasAllRequiredValues = true;
-            return hasAllRequiredValues;
-        }
 
         ContentValues values = new ContentValues();
 
@@ -249,6 +264,7 @@ public class EditorActivity extends AppCompatActivity implements
             } else {
                 Toast.makeText(this, getString(R.string.editor_insert_product_successful),
                         Toast.LENGTH_SHORT).show();
+                finish();
             }
         } else {
             int rowsAffected = getContentResolver().update(mCurrentProductUri, values, null, null);
@@ -259,6 +275,7 @@ public class EditorActivity extends AppCompatActivity implements
             } else {
                 Toast.makeText(this, getString(R.string.editor_update_product_successful),
                         Toast.LENGTH_SHORT).show();
+                finish();
             }
 
         }
@@ -288,7 +305,6 @@ public class EditorActivity extends AppCompatActivity implements
         switch (item.getItemId()) {
             case R.id.action_save:
                 saveProduct();
-                finish();
                 return true;
             case R.id.action_delete:
                 showDeleteConfirmationDialog();
@@ -380,7 +396,7 @@ public class EditorActivity extends AppCompatActivity implements
             String price = cursor.getString(priceColumnIndex);
             String supplierName = cursor.getString(supplierNameColumnIndex);
             String supplierEmail = cursor.getString(supplierEmailColumnIndex);
-            int quantity = cursor.getInt(quantityColumnIndex);
+            mQuantity = cursor.getInt(quantityColumnIndex);
             mImageUri = Uri.parse(imageUriString);
 
             mNameEditText.setText(name);
@@ -389,7 +405,7 @@ public class EditorActivity extends AppCompatActivity implements
             mPrice.setText(price);
             mSupplierName.setText(supplierName);
             mSupplierEmail.setText(supplierEmail);
-            mQuantityEditText.setText(Integer.toString(quantity));
+            mQuantityEditText.setText(Integer.toString(mQuantity));
         }
     }
 
@@ -455,5 +471,23 @@ public class EditorActivity extends AppCompatActivity implements
         }
 
         finish();
+    }
+
+    public void addQuantityButton(View view) {
+        mQuantity++;
+        displayQuantity();
+    }
+
+    public void reduceQuantityButton(View view) {
+        if (mQuantity == 0) {
+            Toast.makeText(this, "Can't decrease quantity", Toast.LENGTH_SHORT).show();
+        } else {
+            mQuantity--;
+            displayQuantity();
+        }
+    }
+
+    public void displayQuantity() {
+        mQuantityEditText.setText(String.valueOf(mQuantity));
     }
 }

@@ -11,4 +11,6 @@
 
     <!-- Color for ADD BUTTONr -->
     <color name="addButtonColor">#FFFFFF</color>
+
+    <color name="rejectButtonColor">#F44336</color>
 </resources>
